@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import { useAuthenticator } from '@aws-amplify/ui-react';
 
 const client = generateClient<Schema>();
 
 function App() {
+  const { signOut } = useAuthenticator();
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
 
   useEffect(() => {
     client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
+      next: (data: { items: Array<Schema["Todo"]["type"]> }) => setTodos([...data.items]),
     });
   }, []);
 
@@ -29,10 +31,11 @@ function App() {
       <div>
         🥳 App successfully hosted. Try creating a new todo.
         <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
+        <a href="https://news.malmrose.com/">
+          Clicky here for NewsBites
         </a>
       </div>
+      <button onClick={signOut}>Sign out</button>
     </main>
   );
 }

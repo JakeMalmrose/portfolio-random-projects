@@ -1,42 +1,52 @@
-import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
-import { useAuthenticator } from '@aws-amplify/ui-react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import Navbar from './components/NavBar';
+import Home from './pages/Home.tsx';
+import Projects from './pages/Projects.tsx';
+import NewsBites from './pages/NewsBites.tsx';
+import Resume from './pages/Resume.tsx';
 
-const client = generateClient<Schema>();
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#bb86fc', // Purple accent
+    },
+    secondary: {
+      main: '#cf6679', // Pink accent
+    },
+    background: {
+      default: '#121212',
+      paper: '#1e1e1e',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 500,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 500,
+    },
+  },
+});
 
 function App() {
-  const { signOut } = useAuthenticator();
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-
-  useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data: { items: Array<Schema["Todo"]["type"]> }) => setTodos([...data.items]),
-    });
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
-  }
-
   return (
-    <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://news.malmrose.com/">
-          Clicky here for NewsBites
-        </a>
-      </div>
-      <button onClick={signOut}>Sign out</button>
-    </main>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/newsbites" element={<NewsBites />} />
+          <Route path="/resume" element={<Resume />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

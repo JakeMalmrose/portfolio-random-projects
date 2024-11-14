@@ -14,8 +14,6 @@ const NewsBites = () => {
           variant="contained"
           color="primary"
           href="https://news.malmrose.com"
-          target="_blank"
-          rel="noopener noreferrer"
         >
           Visit NewsBites
         </Button>

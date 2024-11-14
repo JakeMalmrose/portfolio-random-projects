@@ -24,14 +24,14 @@ const Home = () => {
             textAlign: 'center',
           }}
         >
-          Welcome to My Portfolio
+          Jake Malmrose's Portfolio
         </Typography>
         <Typography
           variant="h2"
           color="text.secondary"
           sx={{ textAlign: 'center', mb: 4 }}
         >
-          Full Stack Developer
+          Full Stack Developer | Software Engineer | AI Integration Specialist
         </Typography>
         <Box sx={{ display: 'flex', gap: 3 }}>
           <Button

@@ -12,6 +12,5 @@ Amplify.configure(outputs);
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
       <App />
-      <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"></meta>
   </React.StrictMode>
 );

@@ -5,6 +5,7 @@ import Home from './pages/Home.tsx';
 import Projects from './pages/Projects.tsx';
 import NewsBites from './pages/NewsBites.tsx';
 import Resume from './pages/Resume.tsx';
+import SkillCheckGame from './pages/Skillcheckgame.tsx';
 
 const theme = createTheme({
   palette: {
@@ -44,6 +45,7 @@ function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/newsbites" element={<NewsBites />} />
           <Route path="/resume" element={<Resume />} />
+          <Route path="/skillcheck" element={<SkillCheckGame />} />
         </Routes>
       </Router>
     </ThemeProvider>

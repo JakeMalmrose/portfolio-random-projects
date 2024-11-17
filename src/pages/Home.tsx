@@ -33,7 +33,7 @@ const Home = () => {
         >
           Full Stack Developer | Software Engineer | AI Integration Specialist
         </Typography>
-        <Box sx={{ display: 'flex', gap: 3 }}>
+        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'center' }}>
           <Button
             component={RouterLink}
             to="/newsbites"
@@ -42,6 +42,15 @@ const Home = () => {
             size="large"
           >
             View NewsBites
+          </Button>
+          <Button
+            component={RouterLink}
+            to="/skillcheck"
+            variant="contained"
+            color="secondary"
+            size="large"
+          >
+            Play Skill Check
           </Button>
           <Button
             component={RouterLink}

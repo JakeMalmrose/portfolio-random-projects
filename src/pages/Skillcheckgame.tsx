@@ -544,3 +544,4 @@ const SkillCheckGame: React.FC = () => {
       </Box>
     </Container>
   );
+}

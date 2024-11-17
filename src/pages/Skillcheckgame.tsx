@@ -37,7 +37,7 @@ interface LobbyData {
   player1Id: string;
 }
 
-const SOCKET_URL = 'ws://174.23.129.232:8001'; // Change this to your IP
+const SOCKET_URL = 'ws://174.23.129.232:8001';
 const INITIAL_ROTATION_SPEED = 2;
 const INITIAL_HIT_ZONE_SIZE = 30;
 const POINTS_TO_WIN = 1000;
@@ -274,55 +274,50 @@ const SkillCheckGame: React.FC = () => {
               cursor: 'pointer'
             }}
           >
-            <Box
-              sx={{
+            {/* Circle and hit zone container */}
+            <svg
+              viewBox="0 0 100 100"
+              style={{
                 position: 'absolute',
                 inset: 0,
-                border: 4,
-                borderColor: 'grey.300',
-                borderRadius: '50%'
+                width: '100%',
+                height: '100%'
               }}
             >
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  width: 4,
-                  height: '50%',
-                  bgcolor: 'text.primary',
-                  transformOrigin: 'bottom',
-                  transform: `translate(-50%, -100%) rotate(${gameState.rotation * 360}deg)`
-                }}
+              {/* Main circle */}
+              <circle
+                cx="50"
+                cy="50"
+                r="48"
+                fill="none"
+                stroke="#e0e0e0"
+                strokeWidth="2"
               />
               
+              {/* Hit zone arc */}
               {gameState.gameActive && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: '50%',
-                    width: '100%',
-                    height: '100%',
-                    transformOrigin: 'center',
-                    transform: `rotate(${gameState.hitZonePosition}deg)`
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: '50%',
-                      width: 4,
-                      height: `${gameState.hitZoneSize / 360 * 100}%`,
-                      bgcolor: 'success.main',
-                      opacity: 0.3,
-                      transform: 'translateX(-50%)'
-                    }}
-                  />
-                </Box>
+                <path
+                  d={`
+                    M 50 50
+                    L ${50 + 48 * Math.cos((gameState.hitZonePosition - 90) * Math.PI / 180)} ${50 + 48 * Math.sin((gameState.hitZonePosition - 90) * Math.PI / 180)}
+                    A 48 48 0 0 1 ${50 + 48 * Math.cos((gameState.hitZonePosition + gameState.hitZoneSize - 90) * Math.PI / 180)} ${50 + 48 * Math.sin((gameState.hitZonePosition + gameState.hitZoneSize - 90) * Math.PI / 180)}
+                    L 50 50
+                  `}
+                  fill="rgba(76, 175, 80, 0.3)"
+                />
               )}
-            </Box>
+              
+              {/* Rotating line */}
+              <line
+                x1="50"
+                y1="50"
+                x2="50"
+                y2="2"
+                stroke="currentColor"
+                strokeWidth="2"
+                transform={`rotate(${gameState.rotation * 360}, 50, 50)`}
+              />
+            </svg>
           </Box>
         )}
 

@@ -1,17 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Socket, io } from 'socket.io-client';
-import { 
-  Container, 
-  Box,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction
-} from '@/components/ui';
 import { Users } from 'lucide-react';
 
 // Constants
@@ -19,7 +7,6 @@ const SOCKET_URL = 'ws://174.23.129.232:8001';
 const FRAME_RATE = 60;
 const MS_PER_FRAME = 1000 / FRAME_RATE;
 const BASE_ROTATION_SPEED = 180; // degrees per second
-const MIN_HIT_ZONE_SIZE = 5;
 const PERFECT_HIT_THRESHOLD = 3; // degrees
 const PERFECT_HIT_BONUS = 50;
 const COMBO_MULTIPLIER = 1.2;
@@ -106,7 +93,7 @@ class ParticleSystem {
   }
 }
 
-const SkillCheckGame: React.FC = () => {
+const SkillCheckGame = () => {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [lobbyList, setLobbyList] = useState<Lobby[]>([]);
@@ -117,7 +104,6 @@ const SkillCheckGame: React.FC = () => {
   const lastFrameTimeRef = useRef<number>(0);
   const particleSystemRef = useRef<ParticleSystem>(new ParticleSystem());
   
-  // Socket setup
   useEffect(() => {
     const newSocket = io(SOCKET_URL);
     
@@ -168,7 +154,6 @@ const SkillCheckGame: React.FC = () => {
     };
   }, []);
 
-  // Game loop
   const gameLoop = (timestamp: number) => {
     if (!lastFrameTimeRef.current) lastFrameTimeRef.current = timestamp;
     
@@ -192,10 +177,8 @@ const SkillCheckGame: React.FC = () => {
 
   const updateGameState = (deltaTime: number) => {
     setGameState(prev => {
-      // Update rotation
       const newRotation = (prev.rotation + (deltaTime * prev.rotationSpeed)) % 360;
       
-      // Update particles
       const currentTime = Date.now();
       const updatedParticles = prev.particleEffects
         .map(particle => ({
@@ -224,17 +207,14 @@ const SkillCheckGame: React.FC = () => {
     const centerY = canvas.height / 2;
     const radius = Math.min(centerX, centerY) * 0.8;
     
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Draw main circle
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    // Draw hit zone
     if (gameState.gameActive) {
       const startAngle = (gameState.hitZonePosition - 90) * Math.PI / 180;
       const endAngle = (gameState.hitZonePosition + gameState.hitZoneSize - 90) * Math.PI / 180;
@@ -247,7 +227,6 @@ const SkillCheckGame: React.FC = () => {
       ctx.fill();
     }
     
-    // Draw rotating line
     const lineAngle = (gameState.rotation - 90) * Math.PI / 180;
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
@@ -255,11 +234,10 @@ const SkillCheckGame: React.FC = () => {
       centerX + Math.cos(lineAngle) * radius,
       centerY + Math.sin(lineAngle) * radius
     );
-    ctx.strokeStyle = 'currentColor';
+    ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
     ctx.stroke();
     
-    // Draw particles
     gameState.particleEffects.forEach(particle => {
       const progress = 1 - ((Date.now() - particle.creation) / particle.lifetime);
       ctx.beginPath();
@@ -286,14 +264,12 @@ const SkillCheckGame: React.FC = () => {
     
     if (zoneEnd > zoneStart) {
       return rotation >= zoneStart && rotation <= zoneEnd;
-    } else {
-      // Handle wrap-around case
-      return rotation >= zoneStart || rotation <= zoneEnd;
     }
+    return rotation >= zoneStart || rotation <= zoneEnd;
   };
 
   const isPerfectHit = (angles: ReturnType<typeof calculateHitAngle>) => {
-    const { rotation, zoneStart, zoneEnd } = angles;
+    const { rotation, zoneStart } = angles;
     const zoneCenter = (zoneStart + (gameState.hitZoneSize / 2)) % 360;
     const distanceToCenter = Math.min(
       Math.abs(rotation - zoneCenter),
@@ -342,7 +318,6 @@ const SkillCheckGame: React.FC = () => {
         perfectHit
       });
 
-      // Haptic feedback
       if (navigator.vibrate) {
         navigator.vibrate(perfectHit ? [50, 50, 50] : [40]);
       }
@@ -364,25 +339,21 @@ const SkillCheckGame: React.FC = () => {
 
   if (error) {
     return (
-      <Container className="max-w-sm">
-        <Card className="mt-4 p-4">
-          <Typography variant="h5" className="text-red-500 mb-2">
-            Connection Error
-          </Typography>
-          <Typography className="text-gray-600">
-            {error}
-          </Typography>
-        </Card>
-      </Container>
+      <div className="max-w-sm mx-auto">
+        <div className="mt-4 p-4 bg-white rounded-lg shadow">
+          <h5 className="text-red-500 text-xl mb-2">Connection Error</h5>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container className="max-w-4xl">
-      <Box className="mt-4 flex flex-col items-center gap-4">
+    <div className="max-w-4xl mx-auto">
+      <div className="mt-4 flex flex-col items-center gap-4">
         {/* Progress Bar */}
-        <Box className="w-full h-5 bg-gray-200 rounded-lg overflow-hidden">
-          <Box
+        <div className="w-full h-5 bg-gray-200 rounded-lg overflow-hidden">
+          <div
             className="h-full transition-all duration-300 rounded-lg"
             style={{
               width: `${getScorePercentage()}%`,
@@ -390,67 +361,61 @@ const SkillCheckGame: React.FC = () => {
               marginLeft: gameState.player1Score > gameState.player2Score ? 0 : 'auto'
             }}
           />
-        </Box>
+        </div>
 
         {/* Game Title and Instructions */}
         {!currentLobby && (
-          <Box className="text-center">
-            <Typography variant="h3" className="bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+          <div className="text-center">
+            <h3 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
               Skill Check Challenge
-            </Typography>
-            <Typography className="mt-2 text-gray-600">
+            </h3>
+            <p className="mt-2 text-gray-600">
               Click when the rotating line aligns with the highlighted zone to score points!
               First player to get {POINTS_TO_WIN} points ahead wins.
-            </Typography>
-          </Box>
+            </p>
+          </div>
         )}
 
         {/* Lobby List */}
         {!currentLobby && (
-          <Card className="w-full">
-            <CardContent>
-              <Box className="flex justify-between items-center mb-2">
-                <Typography variant="h6">Available Lobbies</Typography>
-                <Button
-                  variant="default"
-                  onClick={() => socket?.emit('createLobby')}
-                >
-                  Create Lobby
-                </Button>
-              </Box>
-              <List>
-                {lobbyList.map(lobby => (
-                  <ListItem key={lobby.id} className="border-b last:border-b-0">
-                    <ListItemText>
-                      <Box className="flex items-center gap-2">
-                        <Users className="w-5 h-5" />
-                        <span>{lobby.players}/2 Players</span>
-                      </Box>
-                    </ListItemText>
-                    <ListItemSecondaryAction>
-                      <Button
-                        variant="secondary"
-                        disabled={lobby.players === 2}
-                        onClick={() => socket?.emit('joinLobby', lobby.id)}
-                      >
-                        Join
-                      </Button>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-                {lobbyList.length === 0 && (
-                  <Typography className="text-center py-4 text-gray-500">
-                    No active lobbies. Create one to start playing!
-                  </Typography>
-                )}
-              </List>
-            </CardContent>
-          </Card>
+          <div className="w-full bg-white rounded-lg shadow p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h6 className="text-xl font-semibold">Available Lobbies</h6>
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                onClick={() => socket?.emit('createLobby')}
+              >
+                Create Lobby
+              </button>
+            </div>
+            <div className="divide-y">
+              {lobbyList.map(lobby => (
+                <div key={lobby.id} className="py-3 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    <span>{lobby.players}/2 Players</span>
+                  </div>
+                  <button
+                    className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    disabled={lobby.players === 2}
+                    onClick={() => socket?.emit('joinLobby', lobby.id)}
+                  >
+                    Join
+                  </button>
+                </div>
+              ))}
+              {lobbyList.length === 0 && (
+                <p className="text-center py-4 text-gray-500">
+                  No active lobbies. Create one to start playing!
+                </p>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Game Area */}
         {currentLobby && (
-          <Box className="relative w-full max-w-2xl aspect-square">
+          <div className="relative w-full max-w-2xl aspect-square">
             <canvas
               ref={canvasRef}
               width={800}
@@ -465,83 +430,83 @@ const SkillCheckGame: React.FC = () => {
             
             {/* Combo Counter */}
             {gameState.combo > 1 && (
-              <Typography
+              <p
                 className="absolute top-4 right-4 font-bold text-2xl animate-bounce"
                 style={{ color: gameState.combo >= 5 ? '#ffd700' : '#4caf50' }}
               >
                 {gameState.combo}x Combo!
-              </Typography>
+              </p>
             )}
             
             {/* Perfect Hit Indicator */}
-            <Box
+            <div
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
               style={{ opacity: gameState.particleEffects.length > 0 ? 1 : 0 }}
             >
-              <Typography
+              <p
                 className="text-4xl font-bold text-yellow-500 animate-ping"
                 style={{ display: gameState.particleEffects.some(p => p.color === '#ffd700') ? 'block' : 'none' }}
               >
                 PERFECT!
-              </Typography>
-            </Box>
-          </Box>
+              </p>
+            </div>
+          </div>
         )}
 
         {/* Game Status */}
-        <Box className="text-center">
+        <div className="text-center">
           {currentLobby && (
             <>
-              <Typography variant="h5" className="mb-2">
+              <h5 className="text-xl font-bold mb-2">
                 {getWinningPlayer() 
                   ? `Player ${getWinningPlayer()} Wins!` 
                   : `Player 1: ${gameState.player1Score} - Player 2: ${gameState.player2Score}`
                 }
-              </Typography>
+              </h5>
               
               {!gameState.gameActive && (
-                <Typography className="text-blue-500 animate-pulse">
+                <p className="text-blue-500 animate-pulse">
                   Waiting for opponent...
-                </Typography>
+                </p>
               )}
 
               {gameState.gameActive && (
-                <Typography className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600">
                   {gameState.isPlayer1 ? "You are Player 1" : "You are Player 2"}
-                </Typography>
+                </p>
               )}
             </>
           )}
-        </Box>
+        </div>
 
-        {/* Game Stats (visible during gameplay) */}
+        {/* Game Stats */}
         {currentLobby && gameState.gameActive && (
-          <Card className="w-full mt-4">
-            <CardContent>
-              <Box className="grid grid-cols-3 gap-4 text-center">
-                <Box>
-                  <Typography className="text-gray-600">Speed</Typography>
-                  <Typography className="text-lg font-bold">
-                    {Math.round(gameState.rotationSpeed / BASE_ROTATION_SPEED * 100)}%
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography className="text-gray-600">Hit Zone</Typography>
-                  <Typography className="text-lg font-bold">
-                    {Math.round(gameState.hitZoneSize)}°
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography className="text-gray-600">Best Combo</Typography>
-                  <Typography className="text-lg font-bold">
-                    {gameState.combo}x
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
+          <div className="w-full mt-4 bg-white rounded-lg shadow p-4">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-gray-600">Speed</p>
+                <p className="text-lg font-bold">
+                  {Math.round(gameState.rotationSpeed / BASE_ROTATION_SPEED * 100)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-600">Hit Zone</p>
+                <p className="text-lg font-bold">
+                  {Math.round(gameState.hitZoneSize)}°
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-600">Best Combo</p>
+                <p className="text-lg font-bold">
+                  {gameState.combo}x
+                </p>
+              </div>
+            </div>
+          </div>
         )}
-      </Box>
-    </Container>
+      </div>
+    </div>
   );
-}
+};
+
+export default SkillCheckGame;

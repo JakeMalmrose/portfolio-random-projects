@@ -37,7 +37,7 @@ interface LobbyData {
   player1Id: string;
 }
 
-const SOCKET_URL = 'ws://your-ip:3001'; // Change this to your IP
+const SOCKET_URL = 'ws://174.23.129.232:8001'; // Change this to your IP
 const INITIAL_ROTATION_SPEED = 2;
 const INITIAL_HIT_ZONE_SIZE = 30;
 const POINTS_TO_WIN = 1000;

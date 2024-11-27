@@ -193,35 +193,42 @@ export default function Gambling() {
       const poll = polls.find(p => p.id === pollId);
       if (!poll) return;
 
-      // Update poll status
+      // Update poll status only
       await client.models.Poll.update({
         id: pollId,
         status: winner === 'A' ? 'RESOLVED_A' : 'RESOLVED_B',
+        totalPointsA: 0, // Set to 0 since we're not using these anymore
+        totalPointsB: 0,
       });
 
-      // Get all bets for this poll
+      // Get all bets for this poll and calculate totals
       const pollBets = bets.filter(bet => bet.pollId === pollId);
       const { totalA, totalB } = calculatePollTotals(pollId);
       const totalPool = totalA + totalB;
-      const winningBets = pollBets.filter(bet => bet.choice === winner);
-      const winningTotal = winner === 'A' ? totalA : totalB;
 
-      for (const bet of winningBets) {
-        const winningRatio = bet.amount / winningTotal;
-        const winnings = Math.floor(totalPool * winningRatio);
+      if (totalPool > 0) { // Only process winnings if there were any bets
+        const winningBets = pollBets.filter(bet => bet.choice === winner);
+        const winningTotal = winner === 'A' ? totalA : totalB;
 
-        const userPointsRecord = await client.models.UserPoints.list({
-          filter: { userId: { eq: bet.userId } }
-        });
+        // Process each winning bet
+        for (const bet of winningBets) {
+          const winningRatio = bet.amount / winningTotal;
+          const winnings = Math.floor(totalPool * winningRatio);
 
-        if (userPointsRecord.data.length > 0) {
-          await client.models.UserPoints.update({
-            id: userPointsRecord.data[0].id,
-            points: userPointsRecord.data[0].points + winnings,
+          const userPointsRecord = await client.models.UserPoints.list({
+            filter: { userId: { eq: bet.userId } }
           });
+
+          if (userPointsRecord.data.length > 0) {
+            await client.models.UserPoints.update({
+              id: userPointsRecord.data[0].id,
+              points: userPointsRecord.data[0].points + winnings,
+            });
+          }
         }
       }
 
+      // Refresh the UI
       loadPolls();
       loadUserPoints();
       showSnackbar('Poll resolved successfully', 'success');

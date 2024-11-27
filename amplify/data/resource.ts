@@ -7,7 +7,10 @@ const schema = a.schema({
       userId: a.string().required(),
       points: a.integer().required(),
     })
-    .authorization(allow => [allow.owner()]),
+    .authorization(allow => [
+      allow.owner(),
+      allow.authenticated()
+    ]),
 
   Poll: a
     .model({

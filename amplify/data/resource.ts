@@ -1,6 +1,7 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 
 const schema = a.schema({
+
   UserPoints: a
     .model({
       userId: a.string().required(),
@@ -36,7 +37,7 @@ const schema = a.schema({
       allow.authenticated().to(['read']),
       allow.guest().to(['read']),
     ]),
-});
+})
 
 export type Schema = ClientSchema<typeof schema>;
 

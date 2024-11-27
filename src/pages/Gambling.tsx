@@ -34,12 +34,25 @@ interface Poll {
   status: PollStatus;
   totalPointsA: number;
   totalPointsB: number;
+  owner: string | null;
+}
+
+interface Bet {
+  id: string;
+  userId: string;
+  pollId: string;
+  amount: number;
+  choice: "A" | "B" | null;
+  owner: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function Gambling() {
   const { user } = useAuthenticator();
   const [userPoints, setUserPoints] = useState<number>(500);
   const [polls, setPolls] = useState<Poll[]>([]);
+  const [bets, setBets] = useState<Bet[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newPoll, setNewPoll] = useState({
@@ -85,6 +98,15 @@ export default function Gambling() {
     try {
       const pollsData = await client.models.Poll.list();
       setPolls(pollsData.data);
+      
+      // Load all bets
+      const betsData = await client.models.Bet.list();
+      setBets(betsData.data.filter(bet => 
+        bet !== null && 
+        typeof bet.choice === 'string' && 
+        (bet.choice === 'A' || bet.choice === 'B')
+      ) as Bet[]);
+      
       setLoading(false);
     } catch (error) {
       showSnackbar('Error loading polls', 'error');
@@ -92,10 +114,23 @@ export default function Gambling() {
     }
   };
 
+  const calculatePollTotals = (pollId: string) => {
+    const pollBets = bets.filter(bet => bet.pollId === pollId);
+    const totalA = pollBets
+      .filter(bet => bet.choice === 'A')
+      .reduce((sum, bet) => sum + bet.amount, 0);
+    const totalB = pollBets
+      .filter(bet => bet.choice === 'B')
+      .reduce((sum, bet) => sum + bet.amount, 0);
+    return { totalA, totalB };
+  };
+
   const handleCreatePoll = async () => {
     try {
       await client.models.Poll.create({
-        ...newPoll,
+        title: newPoll.title,
+        optionA: newPoll.optionA,
+        optionB: newPoll.optionB,
         creatorId: user.username,
         status: 'ACTIVE',
         totalPointsA: 0,
@@ -121,38 +156,33 @@ export default function Gambling() {
 
     try {
       // Create bet
-      await client.models.Bet.create({
+      const newBetResponse = await client.models.Bet.create({
         userId: user.username,
         pollId: selectedPoll.id,
         amount,
         choice: betChoice,
       });
 
-      // Update user points
-      const userPointsRecord = await client.models.UserPoints.list({
-        filter: { userId: { eq: user.username } }
-      });
-      
-      if (userPointsRecord.data.length > 0) {
-        await client.models.UserPoints.update({
-          id: userPointsRecord.data[0].id,
-          points: userPoints - amount,
+      if (newBetResponse.data) {
+        // Update user points
+        const userPointsRecord = await client.models.UserPoints.list({
+          filter: { userId: { eq: user.username } }
         });
+        
+        if (userPointsRecord.data.length > 0) {
+          await client.models.UserPoints.update({
+            id: userPointsRecord.data[0].id,
+            points: userPoints - amount,
+          });
+        }
+
+        setBets([...bets, newBetResponse.data as Bet]);
+        setBetDialogOpen(false);
+        setBetAmount('');
+        setBetChoice(null);
+        loadUserPoints();
+        showSnackbar('Bet placed successfully', 'success');
       }
-
-      // Update poll total points
-      await client.models.Poll.update({
-        id: selectedPoll.id,
-        totalPointsA: betChoice === 'A' ? selectedPoll.totalPointsA + amount : selectedPoll.totalPointsA,
-        totalPointsB: betChoice === 'B' ? selectedPoll.totalPointsB + amount : selectedPoll.totalPointsB,
-      });
-
-      setBetDialogOpen(false);
-      setBetAmount('');
-      setBetChoice(null);
-      loadUserPoints();
-      loadPolls();
-      showSnackbar('Bet placed successfully', 'success');
     } catch (error) {
       showSnackbar('Error placing bet', 'error');
     }
@@ -170,15 +200,11 @@ export default function Gambling() {
       });
 
       // Get all bets for this poll
-      const betsData = await client.models.Bet.list({
-        filter: { pollId: { eq: pollId } }
-      });
-      const bets = betsData.data;
-
-      // Calculate winnings and update user points
-      const totalPool = poll.totalPointsA + poll.totalPointsB;
-      const winningBets = bets.filter(bet => bet.choice === winner);
-      const winningTotal = winner === 'A' ? poll.totalPointsA : poll.totalPointsB;
+      const pollBets = bets.filter(bet => bet.pollId === pollId);
+      const { totalA, totalB } = calculatePollTotals(pollId);
+      const totalPool = totalA + totalB;
+      const winningBets = pollBets.filter(bet => bet.choice === winner);
+      const winningTotal = winner === 'A' ? totalA : totalB;
 
       for (const bet of winningBets) {
         const winningRatio = bet.amount / winningTotal;
@@ -231,53 +257,56 @@ export default function Gambling() {
       </Box>
 
       <Box display="flex" flexDirection="column" gap={2}>
-        {polls.map((poll) => (
-          <Card key={poll.id}>
-            <CardContent>
-              <Typography variant="h6">{poll.title}</Typography>
-              <Box display="flex" justifyContent="space-between" mt={2}>
-                <Box flex={1}>
-                  <Typography variant="body1">
-                    Option A: {poll.optionA} ({poll.totalPointsA} points)
-                  </Typography>
+        {polls.map((poll) => {
+          const { totalA, totalB } = calculatePollTotals(poll.id);
+          return (
+            <Card key={poll.id}>
+              <CardContent>
+                <Typography variant="h6">{poll.title}</Typography>
+                <Box display="flex" justifyContent="space-between" mt={2}>
+                  <Box flex={1}>
+                    <Typography variant="body1">
+                      Option A: {poll.optionA} ({totalA} points)
+                    </Typography>
+                  </Box>
+                  <Box flex={1}>
+                    <Typography variant="body1">
+                      Option B: {poll.optionB} ({totalB} points)
+                    </Typography>
+                  </Box>
                 </Box>
-                <Box flex={1}>
-                  <Typography variant="body1">
-                    Option B: {poll.optionB} ({poll.totalPointsB} points)
-                  </Typography>
-                </Box>
-              </Box>
-              <Typography variant="body2" color="textSecondary" mt={1}>
-                Status: {poll.status}
-              </Typography>
-            </CardContent>
-            <CardActions>
-              {poll.status === 'ACTIVE' && (
-                <>
-                  <Button
-                    size="small"
-                    onClick={() => {
-                      setSelectedPoll(poll);
-                      setBetDialogOpen(true);
-                    }}
-                  >
-                    Place Bet
-                  </Button>
-                  {poll.creatorId === user.username && (
-                    <>
-                      <Button size="small" onClick={() => handleResolvePoll(poll.id, 'A')}>
-                        Resolve A Wins
-                      </Button>
-                      <Button size="small" onClick={() => handleResolvePoll(poll.id, 'B')}>
-                        Resolve B Wins
-                      </Button>
-                    </>
-                  )}
-                </>
-              )}
-            </CardActions>
-          </Card>
-        ))}
+                <Typography variant="body2" color="textSecondary" mt={1}>
+                  Status: {poll.status}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                {poll.status === 'ACTIVE' && (
+                  <>
+                    <Button
+                      size="small"
+                      onClick={() => {
+                        setSelectedPoll(poll);
+                        setBetDialogOpen(true);
+                      }}
+                    >
+                      Place Bet
+                    </Button>
+                    {poll.creatorId === user.username && (
+                      <>
+                        <Button size="small" onClick={() => handleResolvePoll(poll.id, 'A')}>
+                          Resolve A Wins
+                        </Button>
+                        <Button size="small" onClick={() => handleResolvePoll(poll.id, 'B')}>
+                          Resolve B Wins
+                        </Button>
+                      </>
+                    )}
+                  </>
+                )}
+              </CardActions>
+            </Card>
+          );
+        })}
       </Box>
 
       {/* Create Poll Dialog */}

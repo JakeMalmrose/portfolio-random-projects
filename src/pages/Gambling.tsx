@@ -149,7 +149,7 @@ export default function Gambling() {
     if (!selectedPoll || !betChoice || !betAmount) return;
 
     const amount = parseInt(betAmount);
-    if (amount > userPoints) {
+    if (amount > userPoints || amount <= 0) {
       showSnackbar('Not enough points', 'error');
       return;
     }

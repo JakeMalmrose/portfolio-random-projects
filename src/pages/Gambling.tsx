@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import { useAuthenticator } from '@aws-amplify/ui-react';
-import { Authenticator } from '@aws-amplify/ui-react';
 import {
   Container,
   Typography,
@@ -218,7 +217,6 @@ export default function Gambling() {
   }
 
   return (
-    <Authenticator>
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
         <Typography variant="h4">Gambling Hall</Typography>
@@ -363,6 +361,5 @@ export default function Gambling() {
         </Alert>
       </Snackbar>
     </Container>
-    </Authenticator>
   );
 }

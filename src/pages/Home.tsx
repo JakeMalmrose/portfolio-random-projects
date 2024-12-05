@@ -43,7 +43,7 @@ const Home = () => {
           >
             View NewsBites
           </Button>
-          <Button
+          {/* <Button
             component={RouterLink}
             to="/skillcheck"
             variant="contained"
@@ -51,7 +51,7 @@ const Home = () => {
             size="large"
           >
             Play Skill Check
-          </Button>
+          </Button> */}
           <Button
             component={RouterLink}
             to="/projects"

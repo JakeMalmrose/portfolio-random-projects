@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Container,
   Typography,
@@ -8,13 +7,23 @@ import {
   CardActions,
   Button,
   Chip,
-  Grid,
-  Link
+  Grid
 } from '@mui/material';
 import LaunchIcon from '@mui/icons-material/Launch';
 import GitHubIcon from '@mui/icons-material/GitHub';
 
-const Project = ({ title, date, description, techStack, links = {} }) => (
+interface ProjectProps {
+  title: string;
+  date: string;
+  description: string[];
+  techStack: string[];
+  links?: {
+    demo?: string;
+    github?: string;
+  };
+}
+
+const Project = ({ title, date, description, techStack, links = {} }: ProjectProps) => (
   <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
     <CardContent sx={{ flexGrow: 1 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 1 }}>

@@ -40,13 +40,13 @@ const Navbar = () => {
           >
             Resume
           </Button>
-          <Button
+          {/* <Button
             component={RouterLink}
             to="/gambling"
             color="inherit"
           >
             Gambling
-          </Button>
+          </Button> */}
         </Box>
       </Toolbar>
     </AppBar>
